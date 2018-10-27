@@ -1,0 +1,50 @@
+# Gap_BOX 
+# Mobius
+# V01.10.2016
+#hint: Gap Box identifies the gap and plots a box showing the gap zone.
+
+input MinGapPercent = 0.001;
+
+def h = high;
+def ph = high[1];
+def l = low;
+def pl = low[1];
+def c = close;
+def bar = BarNumber();
+def gapUP = if bar > 1 and (l - ph) >= (c * MinGapPercent)
+            then 1
+            else double.nan;
+def gapDN = if bar > 1 and (pl - h) >= (c * MinGapPercent)
+            then 1
+            else double.nan;
+def GapBar = if !isNaN(gapUP) or !isNaN(gapDN)
+              then bar
+              else double.nan;
+def hh = if bar == HighestAll(GapBar) and !isNaN(gapUP)
+         then l
+         else if bar == HighestAll(GapBar) and !isNaN(gapDN)
+              then pl
+         else hh[1];
+def ll = if bar == HighestAll(GapBar) and !isNaN(gapUP)
+         then ph
+         else if bar == HighestAll(GapBar) and !isNaN(gapDN)
+              then h
+         else ll[1];
+plot Gap_Box_h = if bar >= HighestAll(GapBar-1)
+                 then highestAll(if isNaN(close[-1])
+                                 then hh
+                                 else double.nan)
+                 else double.nan;
+     Gap_Box_h.SetDefaultColor(color.gray);
+plot Gap_Box_l = if bar >= HighestAll(GapBar-1)
+                 then HighestAll(if isNaN(close[-1])
+                                 then ll
+                                 else double.nan)
+                 else double.nan;
+     Gap_Box_l.SetDefaultColor(color.gray);
+AddCloud(Gap_Box_l, Gap_Box_h, color.white, color.white);
+AddChartBubble(bar == HighestAll(bar), 
+               Gap_Box_h, 
+              "Gap " + AsDollars(Gap_Box_h - Gap_Box_l), 
+               color.gray, yes); 
+# End Code Gap_Box
