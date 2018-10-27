@@ -1,0 +1,235 @@
+# BWD_TradingWindows 
+# 
+# Author: BigWaveDave 
+# Bugs? support@halfwaybacktrading.com 
+# 
+# Description: 
+# Will not work correctly on tick aggregation period charts 
+# Or > 30 minute aggregation period charts 
+# I have no idea why this doesn't work on 1 or 4 hour charts... 
+# Anybody? 
+# I use this study mostly on the euro futures. So the default windows 
+# are for the european markets. This is an enhanced version of 
+# your typical trading windows study which attempts to illustrate the 
+# highs and lows of the window visually. I find it useful to help 
+# understand 
+# how an instrument moves within a trading window. The euro futures 
+# often trade their high or low of the day at or near the open. This 
+# study makes that easy to see. This study automates the task of having 
+# to manually draw rectangles around the trading windows and ranges. 
+# It also illustrates just how slow the euro gets after the european close. 
+# Makes it easy to see when you should be actively trading and when you 
+# should not. 
+# It's my first script so I'm sure there's room for improvement. 
+# 
+# Version 1.2 - 4/5/12 
+# + Added cloud color to be user configurable via 'global' in settings 
+# 
+# Version 1.1 - 3/12/12 
+# + Added code to adjust windows for DST differential between 
+# europe and the USA automagically. On by default. If 
+# you're not looking at a european instrument, turn it off. 
+# Even with it off, this new code hurts performance, no doubt. 
+# Feel free to rip it out if you don't care about it... 
+# Version 1.0 - 3/11/12 
+# + Initial Release 
+
+
+
+input DrawTradingWindowsForToday = yes; 
+input DisplayRangeHighAndLowTimes = yes; 
+input TradingWindowOpenTime = 0900; 
+input TradingWindowCloseTime = 1030; 
+input NoTradingWindowOpenTime = 1200; 
+input NoTradingWindowCloseTime = 1400; 
+input EnableDSTAutoAdjust = yes; 
+input DSTOffsetHours = 1; 
+
+#========================================================================== 
+# Figure out DST adjustment for diffence between USA and europe 
+#========================================================================== 
+#basically, if we are after the 2nd Sunday in March and before 
+#the last Sunday in March, we need to offset the Trading Windows by 1hr forward 
+#if we are after the last Sunday in Oct, until the 1st Sunday in Nov 
+# we need to offset the trading windows by 1hr backward... 
+def CurrentYear = getYear(); 
+def CurrentMonth = getMonth(); 
+def CurrentDOM = getDayOfMonth(getYyyyMmDd()); 
+
+#What is the first day of the week for the 1st of this month? 
+def Day1DOW1 = getDayOfWeek(CurrentYear * 10000 + CurrentMonth * 100 + 1); 
+def FirstSundayDOM1 = if Day1DOW1 < 7 
+then 7 - Day1DOW1 + 1 
+else 1; 
+
+def SecondSundayOfMonth = FirstSundayDOM1 + 7; 
+def isMarch = if (CurrentMonth == 3, 1, 0); 
+def SpringDSTShiftStart = if (isMarch and (SecondSundayOfMonth <= CurrentDOM), 1, 0); 
+
+#last sunday in march... 
+def SpringDSTShiftStop = if (isMarch and ((SecondSundayOfMonth + 14) > CurrentDOM), 1, 0); 
+def DoSpringShift = if (SpringDSTShiftStart and SpringDSTShiftStop and EnableDSTAutoAdjust, 1, 0); 
+
+def isOctober = if (CurrentMonth == 10, 1, 0); 
+def isNovember = if (CurrentMonth == 11, 1, 0); 
+def FallDSTShiftStart = if (isOctober and ((SecondSundayOfMonth + 14) <= CurrentDOM), 1, 0); 
+def FallDSTShiftStop = if (isNovember and FirstSundayDOM1 > CurrentDOM, 1, 0); 
+def DoFallShift = if (FallDSTShiftStart or FallDSTShiftStop and EnableDSTAutoAdjust, 1, 0); 
+
+def DSTOffsetAdjustment = if (DoSpringShift, DSTOffsetHours * 100, if (DoFallShift, -DSTOffsetHours * 100, 0)); 
+
+
+#========================================================================== 
+# Determine and then plot the Trading Windows 
+#========================================================================== 
+#constants 
+def MinutesInADay = 60 * 24; 
+
+# Ok, figure out how many candles in each 'window' 
+# store aggregation period for current chart as 'minutes' 
+def MinutesPerCandle = (getAggregationPeriod() / 1000) / 60; 
+
+def TradingWindowOpenTimeOffset = TradingWindowOpenTime + DSTOffsetAdjustment; 
+def TradingWindowCloseTimeOffset = TradingWindowCloseTime + DSTOffsetAdjustment; 
+def NoTradingWindowOpenTimeOffset = NoTradingWindowOpenTime + DSTOffsetAdjustment; 
+def NoTradingWindowCloseTimeOffset = NoTradingWindowCloseTime + DSTOffsetAdjustment; 
+
+def TradingWindowOpenMinutes = (Floor(TradingWindowOpenTimeOffset / 100) * 60) + (TradingWindowOpenTimeOffset % 100); 
+def TradingWindowCloseMinutes = (Floor(TradingWindowCloseTimeOffset / 100) * 60) + (TradingWindowCloseTimeOffset % 100); 
+
+# get the bar count for the TradingWindow 
+def TradingWindowCandleCount = Floor((TradingWindowCloseMinutes - TradingWindowOpenMinutes) / MinutesPerCandle); 
+
+def NoTradingWindowOpenMinutes = (Floor(NoTradingWindowOpenTimeOffset / 100) * 60) + (NoTradingWindowOpenTimeOffset % 100); 
+def NoTradingWindowCloseMinutes = (Floor(NoTradingWindowCloseTimeOffset / 100) * 60) + (NoTradingWindowCloseTimeOffset % 100); 
+
+# get the bar count for the NoTradingWindow 
+def NoTradingWindowCandleCount = Floor((NoTradingWindowCloseMinutes - NoTradingWindowOpenMinutes) / MinutesPerCandle); 
+
+def isToday = if(getDay() == getLastDay(), 1, 0); 
+
+#PITA. SecondsTillTime only takes constants... Need to manually adjust for DST if it's enabled. 
+def DSTAdjust = if (DoSpringShift, DSTOffsetHours * 3600, if (DoFallShift, -DSTOffsetHours * 3600, 0)); 
+
+def bTradingWindowOpen = if((secondsTillTime(TradingWindowOpenTime) + DSTAdjust > 0), 0, 1); 
+def bTradingWindowClosed = if((secondsTillTime(TradingWindowCloseTime) + DSTAdjust > 0), 0, 1); 
+def bOkToTradeWindow = if(bTradingWindowOpen and !bTradingWindowClosed, 1, 0); 
+
+def bNoTradingWindowOpen = if((secondsTillTime(NoTradingWindowOpenTime) + DSTAdjust > 0), 0, 1); 
+def bNoTradingWindowClosed = if((secondsTillTime(NoTradingWindowCloseTime) + DSTAdjust > 0), 0, 1); 
+def bNotOkToTradeWindow = if(bNoTradingWindowOpen and !bNoTradingWindowClosed, 1, 0); 
+
+# Do some prepping for converting BarNumber() into a time... 
+def CandlesPerDay = (60 * 24) / MinutesPerCandle; 
+def CandlesPerHour = CandlesPerDay / 24; 
+
+# Ok, now for the real pain in the tukkus. 
+# On the very first bar of a 'window' we need to look forward 
+# to setup the high and low for the window. For all subsequent bars 
+# in the window, we'll simply use the same high and low that 
+# we found during our first bar processing... 
+def bFirstTradingWindowBar = if ((bOkToTradeWindow and !bOkToTradeWindow[1]) or (bNotOkToTradeWindow and !bNotOkToTradeWindow[1]), 1, 0); 
+
+# The guts. Do something so seemingly simple... Figure out the high and low for the 'forward' range 
+def loop = if (bOkToTradeWindow, TradingWindowCandleCount, NoTradingWindowCandleCount); 
+
+#really hackey way to get this thing to loop based on anything but an input variable. Basically, set the actual fold <end> value really high and use the exit <while> condition to test the loop count and force an exit when the 'real' loop count is reached or we hit an empty 'right bar'. 
+rec RangeHigh = if (bFirstTradingWindowBar, (fold index = 0 to MinutesInADay with dHigh = high while (index < loop and !IsNaN(getValue(open, -index))) do if getValue(high, -index) > dHigh then getValue(high, -index) else dHigh), 
+if (high > RangeHigh[1], high, RangeHigh[1])); 
+
+rec RangeLow = if (bFirstTradingWindowBar, (fold index1 = 0 to MinutesInADay with dLow = low while (index1 < loop and !IsNaN(getValue(open, -index1))) do if getValue(low, -index1) < dLow then getValue(low, -index1) else dLow), 
+if (low < RangeLow[1], low, RangeLow[1])); 
+
+#Ok we have the data... now decide whether or not to draw it 
+plot TradingWindowHigh; 
+plot TradingWindowLow; 
+plot NoTradingWindowHigh; 
+plot NoTradingWindowLow; 
+
+if (bOkToTradeWindow and ((DrawTradingWindowsForToday and isToday) or !isToday)) 
+{ 
+TradingWindowHigh = RangeHigh; 
+TradingWindowLow = RangeLow; 
+NoTradingWindowHigh = double.nan; 
+NoTradingWindowLow = double.nan; 
+} 
+else if (bNotOkToTradeWindow and ((DrawTradingWindowsForToday and isToday) or !isToday)) 
+{ 
+TradingWindowHigh = double.nan; 
+TradingWindowLow = double.nan; 
+NoTradingWindowHigh = RangeHigh; 
+NoTradingWindowLow = RangeLow; 
+} 
+else 
+{ 
+TradingWindowHigh = double.nan; 
+TradingWindowLow = double.nan; 
+NoTradingWindowHigh = double.nan; 
+NoTradingWindowLow = double.nan; 
+} 
+
+#what? no easy way to get the time of a bar? 
+#Figure out the bar offset from the start of our known window start time. 
+rec WindowStartBar = if (bFirstTradingWindowBar, barNumber(), WindowStartBar[1]); 
+
+#What's the offset from the start of the Trading Window? 
+#How about the offset of the start of the trading window itself? 
+def AdjustedBarNumber = (TradingWindowOpenMinutes / MinutesPerCandle) + (barNumber() - WindowStartBar); 
+
+#Oh the humanity. Oh the hackery. 
+def Hours = Floor(AdjustedBarNumber / CandlesPerHour); 
+def Minutes10s = Floor(((AdjustedBarNumber % CandlesPerHour) * MinutesPerCandle) / 10); 
+def Minutes1s = ((AdjustedBarNumber % CandlesPerHour) * MinutesPerCandle) % 10; 
+
+# need to track if we have already displayed a bubble for this range's high 
+# and low 
+rec RangeHighBubbleExists = compoundValue(1, if (bFirstTradingWindowBar[-1], 0, if (DisplayRangeHighAndLowTimes and bOkToTradeWindow and (high == TradingWindowHigh), 1, RangeHighBubbleExists[1])), 0); 
+rec RangeLowBubbleExists = compoundValue(1, if (bFirstTradingWindowBar[-1], 0, if (DisplayRangeHighAndLowTimes and bOkToTradeWindow and (low == TradingWindowLow), 1, RangeLowBubbleExists[1])), 0); 
+
+# no way to easily do leading zeros? drat. 
+# what a hack. 
+#AddChartBubble(DisplayRangeHighAndLowTimes and bOkToTradeWindow and (high == TradingWindowHigh) and !RangeHighBubbleExists[1], high, concat(concat(concat(Hours, ":"winking smiley, Minutes10s), Minutes1s), color.dark_green); 
+
+#AddChartBubble(DisplayRangeHighAndLowTimes and bOkToTradeWindow and (low == TradingWindowLow) and !RangeLowBubbleExists[1], low, concat(concat(concat(Hours, ":"winking smiley, Minutes10s), Minutes1s), color.dark_red, no); 
+
+TradingWindowHigh.SetDefaultColor(color.dark_green); 
+TradingWindowLow.SetDefaultColor(color.dark_green); 
+NoTradingWindowHigh.SetDefaultColor(color.dark_red); 
+NoTradingWindowLow.SetDefaultColor(color.dark_red); 
+
+#Hide some things we don't really want to show unless the user overrides us in the settings... 
+#TradingWindowHigh.hidePricePlot(yes); 
+TradingWindowHigh.HideBubble(); 
+TradingWindowHigh.HideTitle(); 
+
+#TradingWindowLow.hidePricePlot(yes); 
+TradingWindowLow.HideBubble(); 
+TradingWindowLow.HideTitle(); 
+
+#NoTradingWindowHigh.hidePricePlot(yes); 
+NoTradingWindowHigh.HideBubble(); 
+NoTradingWindowHigh.HideTitle(); 
+
+#NoTradingWindowLow.hidePricePlot(yes); 
+NoTradingWindowLow.HideBubble(); 
+NoTradingWindowLow.HideTitle(); 
+
+DefineGlobalColor("Trade Zone Color", color.dark_green); 
+DefineGlobalColor("No Trade Zone Color", color.dark_red); 
+
+AddCloud(TradingWindowHigh, TradingWindowLow, globalColor("Trade Zone Color"), globalColor("Trade Zone Color"));
+AddCloud(NoTradingWindowHigh, NoTradingWindowLow, globalColor("No Trade Zone Color"), globalColor("No Trade Zone Color"));
+
+
+
+input price = close;
+
+input VolumeFastLength = 1;
+input VolumeSlowLength = 10;
+
+
+def VolumeOsc = (Average(volume, VolumeFastLength) - Average(volume, VolumeSlowLength)) / Average(volume, VolumeSlowLength);
+plot VolumeSpike = NoTradingWindowHigh and VolumeOsc > 1;
+VolumeSpike.SetDefaultColor(Color.white);
+VolumeSpike.SetLineWeight(1);
+VolumeSpike.SetPaintingStrategy(PaintingStrategy.BOOLEAN_ARROW_UP); 
