@@ -1,0 +1,19 @@
+input price = close;
+
+input VolumeFastLength = 1;
+input VolumeSlowLength = 20;
+def na=double.nan;
+def ORBegin =1200;
+def OREnd = 1400;
+Def ORActive = if secondstilltime(OREnd)>0 AND secondsfromtime(ORBegin)>=0 then 1 else 0;
+Rec ORLow = if ORLow [1] ==0 or ORActive [1] ==0 AND ORActive ==1 then low else ORLow [1];
+def RP1=if ORActive then ORLow -(ORLow*.0035) else na;
+#RP1.setdefaultcolor(color.yellow);
+#RP1.setStyle(Curve.POINTS);
+#RP1.setlineweight(3);
+
+def VolumeOsc = (Average(volume, VolumeFastLength) - Average(volume, VolumeSlowLength)) / Average(volume, VolumeSlowLength);
+plot VolumeSpike =  RP1 and VolumeOsc > 1;
+VolumeSpike.SetDefaultColor(Color.white);
+VolumeSpike.SetLineWeight(1);
+VolumeSpike.SetPaintingStrategy(PaintingStrategy.BOOLEAN_ARROW_UP); 
