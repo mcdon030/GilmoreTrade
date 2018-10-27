@@ -1,0 +1,94 @@
+Opening Range from Prior Days (Selectable) Displayed Today
+#Sleepyzzz 20180929
+#20181007 Added Optionable Bubbles (Moveable Horizontally), Optional Basis to Start Plots (Regular Trading or Day) on Current Day only
+# Since date and time functions act differently for futures and stocks, please enter the timezone (only ET, CT, MT and PT zones are coded below) where you have selected in settings
+input timezone = {default ET, CT, MT, PT};
+def ymd      = GetYYYYMMDD();
+def candles  = !IsNaN(close);
+def capture  = ymd != ymd[1];
+def dayCount = CompoundValue(1, if capture then dayCount[1] + 1 else dayCount[1], 0);
+def thisDay  = (HighestAll(dayCount) - dayCount) ;
+
+input priordays_back          = 3;
+input show_plot_from_Start_of = {"Regular Trading",default  "Day"};
+
+def h = high;
+def l = low;
+def o = open;
+def c = close;
+
+input ORBegin = 0900;
+input OREnd   = 1600;
+
+def ORActive = if thisDay == priordays_back and SecondsTillTime(OREnd) > 0 and SecondsFromTime(ORBegin) >= 0 
+               then 1
+               else 0;
+def ORHigh  = if ORHigh[1] == 0 and ORActive
+              then h
+              else if ORActive and h > ORHigh[1] 
+              then h 
+              else ORHigh[1];
+def ORLow   = if ORLow[1] == 0 and ORActive
+              then l 
+              else if ORActive and l < ORLow[1]
+              then l 
+              else ORLow[1];
+def orhi    = if IsNaN(ORHigh) then orhi[1] else ORHigh;
+def orlo    = if IsNaN(ORLow)  then orlo[1] else ORLow;
+
+def globex_open;
+def globex_close;
+switch (timezone){
+case ET:
+  globex_open =1800;
+  globex_close=0000;
+case CT:
+  globex_open =1800;
+  globex_close=0100;
+case MT:
+  globex_open =1800;
+  globex_close=0200;
+case PT:
+  globex_open =1800;
+  globex_close=0300;
+}
+
+def x = if (if GetDayOfWeek(GetYYYYMMDD()) == 1 then SecondsFromTime(globex_open) >= 0 else SecondsFromTime(Globex_Open) >= 0) or SecondsFromTime(Globex_Close) < 0 then 1 else 0; ;
+
+
+plot ORH    = if thisDay > 0 or
+                 thisday==0 and x  or
+                 show_plot_from_Start_of == show_plot_from_Start_of."Regular Trading" and GetTime() < RegularTradingStart(GetYYYYMMDD())   
+              then Double.NaN 
+              else orhi;
+plot ORL    = if thisDay > 0 or
+                 thisDay == 0 and x or
+                 show_plot_from_Start_of == show_plot_from_Start_of."Regular Trading" and GetTime() < RegularTradingStart(GetYYYYMMDD()) 
+              then Double.NaN 
+              else orlo;
+plot MID    = if thisDay > 0 or
+                 thisDay == 0 and x or
+                 show_plot_from_Start_of == show_plot_from_Start_of."Regular Trading" and GetTime() < RegularTradingStart(GetYYYYMMDD())  
+              then Double.NaN 
+              else Round((orhi + orlo) / 2 / TickSize(), 0) * TickSize();
+
+ORH.SetDefaultColor(Color.GREEN);
+ORH.SetStyle(Curve.POINTS);
+ORH.SetLineWeight(2);
+ORL.SetDefaultColor(Color.RED);
+ORL.SetStyle(Curve.POINTS);
+ORL.SetLineWeight(2);
+MID.SetDefaultColor(Color.PLUM);
+MID.SetStyle(Curve.POINTS);
+MID.SetLineWeight(2);
+
+input showlabel   = yes;
+AddLabel(showlabel, "Balance : OR " + priordays_back + " Day(s) Ago", if close > orhi then Color.GREEN else if close < orlo then Color.RED else Color.YELLOW);
+
+input showbubbles = yes;
+input bubblemover = 3;
+def   b = bubblemover;
+def  b1 = b + 1;
+AddChartBubble(showbubbles and IsNaN(close[b]) and !IsNaN(close[b1]), orhi[b1], "ORH " + AsText(orhi) + "\n" + priordays_back + " Day(s) Ago", if close[b1] > orhi[b1] then Color.GREEN else Color.RED);
+AddChartBubble(showbubbles and IsNaN(close[b]) and !IsNaN(close[b1]), orlo[b1], "ORL " + AsText(orlo) + "\n" + priordays_back + " Day(s) Ago", if close[b1] < orlo[b1] then Color.RED else Color.GREEN, no);
+AddChartBubble(showbubbles and IsNaN(close[b]) and !IsNaN(close[b1]), MID[b1] , "ORM " + AsText(Round(MID[b1] / TickSize(), 0) * TickSize())  + "\n" + priordays_back + " Day(s) Ago", if close[b1] > MID[b1] then Color.GREEN else Color.RED);
