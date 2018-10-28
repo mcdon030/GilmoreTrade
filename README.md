@@ -7,3 +7,4 @@ Suggestions are:
 2. look for mid day volume spikes as it may continue the trend into close.
 3. need hammer or V day from prior SPX
 4. need market rotation for /ES, MIN, and OEX. see picture to create label code
+5. pictures from a modified P/L have been added, they are screwed but the Rate of Return works far better on ETFs. GDX in particular
