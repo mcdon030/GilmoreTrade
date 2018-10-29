@@ -8,3 +8,4 @@ Suggestions are:
 3. need hammer or V day from prior SPX
 4. need market rotation for /ES, MIN, and OEX. see picture to create label code
 5. pictures from a modified P/L have been added, they are screwed but the Rate of Return works far better on ETFs. GDX in particular
+6. tested the difference between scott carney's abcd patterns and gilmore's strict 1:1 balance rule today. THe problem with TrendXplorer's altered strategy code is i simply don't know how to change the logic to have the strict measures dictate buys - meaning the strategy only judges entry based on point D's fire. It does however judge the exit, though.
