@@ -1,0 +1,601 @@
+From 
+#Planet positions using elliptical orbits   
+#Caution-http://www.stargazing.net/kepler/ellipse.html <Caution-http://www.stargazing..net/kepler/ellipse.html >   
+#Caution-https://en.wikipedia.org/wiki/Epoch_(astronomy) <Caution-https://en.wikipedia.org/wiki/Epoch_(astronomy) >    
+#Caution-http://www.met.rdg.ac.uk/~ross/Astronomy/Planets.html <Caution-http://www.met.rdg.ac..uk/~ross/Astronomy/Planets.html >
+# 11/1/2017 Jm added Jupiter Saturn Uranus Neptune and pluto and correct mars =def O_ma = (49..57854 #to 49.57854. Need Moonelements.
+## Jocelyn Boily, mcdon030 and lash 
+## need sun and moon added
+            
+            declare upper;
+            
+            #FNrange
+            # return angles between 0 and 2*PI
+script FNrange {
+    input x = 0.0;
+    def a_ = x % 6.283185307179586;
+    plot   a =  if a_ < 0 then 6.283185307179586 +
+a_ else a_;
+}
+            
+            #FNkep
+            #   returns the true anomaly given
+            #   m - the mean anomaly in radians
+            #   ecc - the eccentricity of the orbit
+            #   eps set to 0.00000001 - the convergence paramter(e-8 or e-9 is usually fine, 2-12 e-14 for very accurate work
+            #
+script FNkep {
+    input m = 0.0;
+    input ecc = 0.0;
+    def ev = fold i = 0 to 100 with e = m while
+(AbsValue(e - ecc * Sin(e) - m) > 0.00000001) do  e - (e - ecc * Sin(e) - m)
+/ (1 - ecc * Cos(e));
+    def v_ = 2 * ATan( Sqrt((1 + ecc) / (1 - ecc)) *
+Tan(.5 * ev));
+    plot v = if v_ < 0 then v_ + 6.283185307179586 else v_;
+}
+            
+            #FNatn2
+            #'   Atan depending of depending on the signs of x and y.
+            #'
+script FNatn2 {
+    input y = 0.0;
+    input x = 0.0;
+    def   a1 = ATan(y / x);
+    def   a2 = if x < 0.0 then a1 +
+3.141592653589793 else a1;
+    plot  a = if  (y < 0) and  x >= 0.0  then a2 +
+6.283185307179586 else a2;
+}
+            
+            #def JD = 2440588.5 + GetTime() / 86400000;
+            #def nd =  - 2451545 + 2440588.5 + GetTime() /86400000;;
+def nd =  -10956.5 + GetTime() / 86400000;
+def Ct = nd / 36525; # delta t in century from J2000
+            
+            #AddLabel(yes, "J2000:  " + nd, Color.WHITE);
+
+def PI = 3.141592653589793;
+def degs = 180.0 / PI;
+def rads = PI / 180.0;
+
+def ec = ( 23.43929111 - (46.815 + (0.00059 -
+0.001813 * Ct) * Ct) * Ct / 3600 ) * rads;
+            
+            #Heliocentric coordinates of Earth
+            
+            # Earth
+def I_e = (0.00005 - 0.000000356985 * nd) * rads;
+def O_e = (-11.26064 - 0.00013863 * nd) * rads;
+def P_e = (102.94719 + 0.00000911309 * nd) * rads;
+def a_e = 1.00000011 - 1.36893 / 1000000000000.0  *
+nd;
+def e_e = 0.01671022 - 0.00000000104148 * nd;
+def L_e = (100.46435 + 0.985609101 * nd) * rads;
+
+def m_e = FNrange( L_e - P_e);
+def v_e = FNkep (m_e , e_e);
+
+def er = a_e * ( 1 - e_e * e_e ) / ( 1 + e_e *
+Cos(v_e));
+            
+            #earth Heliocentric Coordindates
+def Xh_e = er * Cos(v_e + P_e);
+def Yh_e = er * Sin(v_e + P_e);
+def Zh_e = 0;
+
+def EarthLong = v_e + P_e;
+def Earth_Long = EarthLong * degs % 360;
+            
+            # Mercury
+def I_me = (7.00487 - 0.000000178797 * nd) * rads;#### inclination
+def O_me = (48.33167 - 0.0000033942 * nd) * rads;#### long of asc 
+def P_me = (77.45645 + 0.00000436208 * nd) * rads;###
+def a_me = 0.38709893 + 1.80698 / 100000000000.0 *
+nd;###smei major
+def e_me = 0.20563069 + 0.000000000691855 * nd;  ### ecentricity
+def L_me = (252.25084 + 4.092338796 * nd) * rads;##### mean anonaly
+
+def m_me = FNrange( L_me - P_me);
+def v_me = FNkep (m_me , e_me);
+def r_me = a_me * ( 1 - e_me * e_me ) / ( 1 + e_me *
+Cos(v_me));
+            
+            #Heliocentric coordinates of  Mercury
+def Xh_me = r_me * (Cos(O_me) * Cos(v_me + P_me -
+O_me) - Sin(O_me) * Sin(v_me + P_me - O_me) * Cos(I_me));
+def Yh_me = r_me * (Sin(O_me) * Cos(v_me + P_me -
+O_me) + Cos(O_me) * Sin(v_me + P_me - O_me) * Cos(I_me));
+def Zh_me = r_me * (Sin(v_me + P_me - O_me) *
+Sin(I_me));
+            
+            #Equatorial Coordinate
+def Xq_me =  Xh_me - Xh_e;
+def Yq_me = (Yh_me - Yh_e) * Cos(ec) - Zh_me *
+Sin(ec);
+def Zq_me = (Yh_me - Yh_e) * Sin(ec) + Zh_me *
+Cos(ec);
+
+
+def MerLong = v_me + P_me;
+def MerLongDeg = (MerLong * degs) % 360;
+            
+            #Right Ascension and declination function:
+
+def ra_me = (FNatn2(Yq_me, Xq_me) * degs % 360)/15;
+def dec_me = ATan(Zq_me / Sqr(Xq_me * Xq_me + Yq_me * Yq_me)) * degs % 360;
+def dr_me = Sqrt(Xq_me * Xq_me + Yq_me * Yq_me +
+Zq_me * Zq_me);
+            
+            #def Mersdelta = ATan(Zq_me / Sqrt(Xq_me * Xq_me +Yq_me * Yq_me));
+def trydistance = dr_me;
+            
+            #AddLabel(yes, "Mer long " + (MerLong * degs) % 360,Color.LIME);
+            #AddLabel(yes, "Mer Distance " + dr_me, Color.LIME);
+            
+            
+            # Mars
+def I_ma = (1.85061 - 0.000000193703 * nd) * rads;
+def O_ma = (49.57854 - 0.0000077587 * nd) * rads;
+def P_ma = (336.04084 + 0.00001187 * nd) * rads;
+def a_ma = 1.52366231 - 0.000000001977 * nd;
+def e_ma = 0.09341233 - 0.00000000325859 * nd;
+def L_ma = (355.45332 + 0.524033035 * nd) * rads;
+
+def m_ma = FNrange( L_ma - P_ma);
+def v_ma = FNkep (m_ma , e_ma);
+def r_ma = a_ma * ( 1 - e_ma * e_ma ) / ( 1 + e_ma *
+Cos(v_ma));
+            
+            #Heliocentric coordinates of Mars
+def Xh_ma = r_ma * (Cos(O_ma) * Cos(v_ma + P_ma -
+O_ma) - Sin(O_ma) * Sin(v_ma + P_ma - O_ma) * Cos(I_ma));
+def Yh_ma = r_ma * (Sin(O_ma) * Cos(v_ma + P_ma -
+O_ma) + Cos(O_ma) * Sin(v_ma + P_ma - O_ma) * Cos(I_ma));
+def Zh_ma = r_ma * (Sin(v_ma + P_ma - O_ma) *
+Sin(I_ma));
+            
+            #Equatorial Coordinate
+def Xq_ma = Xh_ma - Xh_e;
+def Yq_ma = (Yh_ma - Yh_e) * Cos(ec) - Zh_ma *
+Sin(ec);
+def Zq_ma = (Yh_ma - Yh_e) * Sin(ec) + Zh_ma *
+Cos(ec);
+
+def MarLong = v_ma + P_ma;
+def  MarLong_deg = MarLong * degs % 360;
+
+def ra_ma = (FNatn2(Yq_ma, Xq_ma) * degs % 360) /
+15;
+def dec_ma = ATan(Zq_ma / Sqr(Xq_ma * Xq_ma + Yq_ma * Yq_ma)) * degs;
+def dr_ma = Sqrt(Xq_ma * Xq_ma + Yq_ma * Yq_ma +
+Zq_ma * Zq_ma);
+            #plot Marsdelta = ATan(Zq_ma / Sqrt(Xq_ma * Xq_ma +Yq_ma * Yq_ma));
+
+def MarsDistance = Sqrt(Xq_ma * Xq_ma + Yq_ma *
+Yq_ma + Zq_ma * Zq_ma);
+            
+            #AddLabel(yes, "Mars long " + (MarLong * degs) %360, Color.ORANGE);
+            #AddLabel(yes, "Mars Distance " + MarsDistance,Color.ORANGE);
+# venus
+def I_ve = (3.39471 - 0.0000000217507 * nd) * rads;
+def O_ve = (76.68069 - 0.0000075815 * nd) * rads;
+def P_ve = (131.53298 - 0.000000827439 * nd) * rads;
+def a_ve = 0.72333199 + 2.51882 / 100000000000.0 *
+nd;
+def e_ve = 0.00677323 - 0.00000000135195 * nd;
+def L_ve = (181.97973 + 1.602130474 * nd) * rads;
+
+def m_ve = FNrange( L_ve - P_ve);
+def v_ve = FNkep (m_ve , e_ve);
+def r_ve = a_ve * ( 1 - e_ve * e_ve ) / ( 1 + e_ve *
+Cos(v_ve));
+            
+            #Heliocentric coordinates of Venus
+def Xh_ve = r_ve * (Cos(O_ve) * Cos(v_ve + P_ve -
+O_ve) - Sin(O_ve) * Sin(v_ve + P_ve - O_ve) * Cos(I_ve));
+def Yh_ve = r_ve * (Sin(O_ve) * Cos(v_ve + P_ve -
+O_ve) + Cos(O_ve) * Sin(v_ve + P_ve - O_ve) * Cos(I_ve));
+def Zh_ve = r_ve * (Sin(v_ve + P_ve - O_ve) *
+Sin(I_ve));
+            
+            #Equatorial Coordinate
+def Xq_ve = Xh_ve - Xh_e;
+def Yq_ve = (Yh_ve - Yh_e) * Cos(ec) - Zh_ve *
+Sin(ec);
+def Zq_ve = (Yh_ve - Yh_e) * Sin(ec) + Zh_ve *
+Cos(ec);
+
+def VeLong = v_ve + P_ve;
+def  VeLong_deg = VeLong * degs % 360;
+
+def ra_ve = (FNatn2(Yq_ve, Xq_ve) * degs % 360) /
+15;
+def dec_ve = ATan(Zq_ve / Sqr(Xq_ve * Xq_ve + Yq_ve * Yq_ve)) * degs;
+def dr_ve = Sqrt(Xq_ve * Xq_ve + Yq_ve * Yq_ve +
+Zq_ve * Zq_ve);
+            #plot Venusdelta = ATan(Zq_ve / Sqrt(Xq_ve * Xq_ve +Yq_ve * Yq_ve));
+
+def VenusDistance = Sqrt(Xq_ve * Xq_ve + Yq_ve *
+Yq_ve + Zq_ve * Zq_ve);
+            
+            #AddLabel(yes, "Venus long " + (VeLong * degs) %360, Color.ORANGE);
+            #AddLabel(yes, "Venus Distance " + VenusDistance,Color.ORANGE);
+
+
+# jupiter
+def I_ju = (1.3053 - 0.0000000315613 * nd) * rads;
+def O_ju = (100.55615 + 0.00000925675 * nd) * rads;
+def P_ju = (14.75385 + 0.00000638779 * nd) * rads;
+def a_ju = 5.20336301 + 0.0000000166289 * nd;
+def e_ju = 0.04839266 - 0.00000000352635 * nd;
+def L_ju = (34.40438 + 0.083086762 * nd) * rads;
+
+def m_ju = FNrange( L_ju - P_ju);
+def v_ju = FNkep (m_ju, e_ju);
+def r_ju = a_ju * ( 1 - e_ju * e_ju) / ( 1 + e_ju *
+Cos(v_ju));
+            
+            #Heliocentric coordinates of Jupiter
+def Xh_ju = r_ju * (Cos(O_ju) * Cos(v_ju + P_ju -
+O_ju) - Sin(O_ju) * Sin(v_ju + P_ju - O_ju) * Cos(I_ju));
+def Yh_ju = r_ju * (Sin(O_ju) * Cos(v_ju + P_ju -
+O_ju) + Cos(O_ju) * Sin(v_ju + P_ju - O_ju) * Cos(I_ju));
+def Zh_ju = r_ju * (Sin(v_ju + P_ju - O_ju) *
+Sin(I_ju));
+            
+            #Equatorial Coordinate
+def Xq_ju = Xh_ju - Xh_e;
+def Yq_ju = (Yh_ju - Yh_e) * Cos(ec) - Zh_ju *
+Sin(ec);
+def Zq_ju = (Yh_ju - Yh_e) * Sin(ec) + Zh_ju *
+Cos(ec);
+
+def JupLong = v_ju + P_ju;
+def  JupLong_deg = JupLong * degs % 360;
+
+def ra_ju = (FNatn2(Yq_ju, Xq_ju) * degs % 360) /
+15;
+def dec_ju = ATan(Zq_ju / Sqr(Xq_ju * Xq_ju + Yq_ju * Yq_ju)) * degs;
+def dr_ju = Sqrt(Xq_ju * Xq_ju + Yq_ju * Yq_ju +
+Zq_ju * Zq_ju);
+            #plot Jupiterdelta = ATan(Zq_ju / Sqrt(Xq_ju * Xq_ju+ Yq_ju * Yq_ju));
+
+def JupiterDistance = Sqrt(Xq_ju * Xq_ju + Yq_ju *
+Yq_ju + Zq_ju * Zq_ju);
+            
+            #AddLabel(yes, "Jupiter long " + (JupLong * degs) %360, Color.ORANGE);
+            #AddLabel(yes, "Jupiter Distance " +JupiterDistance, Color.ORANGE
+
+# saturn
+def I_sa = (2.48446 + 0.0000000464674 * nd) * rads;
+def O_sa = (113.71504 - 0.0000121 * nd) * rads;
+def P_sa = (92.43194 - 0.0000148216 * nd) * rads;
+def a_sa = 9.53707032 - 0.0000000825544 * nd;
+def e_sa = 0.0541506 - 0.0000000100649 * nd;
+def L_sa = (49.94432 + 0.033470629 * nd) * rads;
+
+def m_sa = FNrange( L_sa - P_sa);
+def v_sa = FNkep (m_sa, e_sa);
+def r_sa = a_sa * ( 1 - e_sa * e_sa) / ( 1 + e_sa *
+Cos(v_sa));
+            
+            #Heliocentric coordinates of Saturn
+def Xh_sa = r_sa * (Cos(O_sa) * Cos(v_sa + P_sa -
+O_sa) - Sin(O_sa) * Sin(v_sa + P_sa - O_sa) * Cos(I_sa));
+def Yh_sa = r_sa * (Sin(O_sa) * Cos(v_sa + P_sa -
+O_sa) + Cos(O_sa) * Sin(v_sa + P_ju - O_ju) * Cos(I_ju));
+def Zh_sa = r_sa * (Sin(v_sa + P_sa - O_sa) *
+Sin(I_sa));
+            
+            #Equatorial Coordinate
+def Xq_sa = Xh_sa - Xh_e;
+def Yq_sa = (Yh_sa - Yh_e) * Cos(ec) - Zh_sa *
+Sin(ec);
+def Zq_sa = (Yh_sa - Yh_e) * Sin(ec) + Zh_sa *
+Cos(ec);
+
+def SatLong = v_sa + P_sa;
+def  SatLong_deg = SatLong * degs % 360;
+
+def ra_sa = (FNatn2(Yq_sa, Xq_sa) * degs % 360) /
+15;
+def dec_sa = ATan(Zq_sa / Sqr(Xq_sa * Xq_sa + Yq_sa * Yq_sa)) * degs;
+def dr_sa = Sqrt(Xq_sa * Xq_sa + Yq_sa * Yq_sa +
+Zq_sa * Zq_sa);
+            #plot Saturndelta = ATan(Zq_sa / Sqrt(Xq_sa * Xq_sa+ Yq_sa * Yq_sa));
+
+def SaturnDistance = Sqrt(Xq_sa * Xq_sa + Yq_sa *
+Yq_sa + Zq_sa * Zq_sa);
+            
+            #AddLabel(yes, "Saturn long " + (SatLong * degs) %360, Color.ORANGE);
+            #AddLabel(yes, "Saturn Distance " + SaturnDistance,Color.ORANGE
+
+
+#uranus
+def I_ur = (0.76986 - 0.0000000158947 * nd) * rads;
+def O_ur = (74.22988 + 0.0000127873 * nd) * rads;
+def P_ur = (170.96424 + 0.0000099822 * nd) * rads;
+def a_ur = 19.19126393 + 0.0000000416222 * nd;
+def e_ur = 0.04716771 - 0.00000000524298 * nd;
+def L_ur = (313.23218 + 0.011731294 * nd) * rads;
+
+def m_ur = FNrange( L_ur - P_ur);
+def v_ur = FNkep (m_ur, e_ur);
+def r_ur = a_ur * ( 1 - e_ur * e_ur) / ( 1 + e_ur *
+Cos(v_ur));
+            
+            #Heliocentric coordinates of uranus
+def Xh_ur = r_ur * (Cos(O_ur) * Cos(v_ur + P_ur -
+O_ur) - Sin(O_ur) * Sin(v_ur + P_ur - O_ur) * Cos(I_ur));
+def Yh_ur = r_ur * (Sin(O_ur) * Cos(v_ur + P_ur -
+O_ur) + Cos(O_ur) * Sin(v_ur + P_ur - O_ur) * Cos(I_ur));
+def Zh_ur = r_ur * (Sin(v_ur + P_ur - O_ur) *
+Sin(I_ur));
+            
+            #Equatorial Coordinate
+def Xq_ur = Xh_ur - Xh_e;
+def Yq_ur = (Yh_ur - Yh_e) * Cos(ec) - Zh_ur *
+Sin(ec);
+def Zq_ur = (Yh_ur - Yh_e) * Sin(ec) + Zh_ur *
+Cos(ec);
+
+def UranLong = v_ur + P_ur;
+def  UranLong_deg = UranLong * degs % 360;
+
+def ra_ur = (FNatn2(Yq_ur, Xq_ur) * degs % 360) /
+15;
+def dec_ur = ATan(Zq_ur / Sqr(Xq_ur * Xq_ur + Yq_ur * Yq_ur)) * degs;
+def dr_ur = Sqrt(Xq_ur * Xq_ur + Yq_ur * Yq_ur +
+Zq_ur * Zq_ur);
+            #plot Uranusdelta = ATan(Zq_ur / Sqrt(Xq_ur * Xq_ur+ Yq_ur * Yq_ur));
+
+def UranusDistance = Sqrt(Xq_ur * Xq_ur + Yq_ur *
+Yq_ur + Zq_ur * Zq_ur);
+            
+            #AddLabel(yes, "Uranus long " + (UranLong * degs) %360, Color.ORANGE);
+            #AddLabel(yes, "Uranus Distance " + UranusDistance,Color.ORANGE
+#Neptune
+def I_ne = (1.76917 - 0.0000000276827 * nd) * rads;
+def O_ne = (131.72169 - 0.0000011503 * nd) * rads;
+def P_ne = (44.97135 - 0.00000642201 * nd) * rads;
+def a_ne = 30.06896348 - 0.0000000342768 * nd;
+def e_ne = 0.00858587 + 0.000000000688296 * nd;
+def L_ne = (304.88003 + 0.0059810572 * nd) * rads;
+
+def m_ne = FNrange( L_ne - P_ne);
+def v_ne = FNkep (m_ne, e_ne);
+def r_ne = a_ne * ( 1 - e_ne * e_ne) / ( 1 + e_ne *
+Cos(v_ne));
+            
+            #Heliocentric coordinates of neptune
+def Xh_ne = r_ne * (Cos(O_ne) * Cos(v_ne + P_ne -
+O_ne) - Sin(O_ne) * Sin(v_ne + P_ne - O_ne) * Cos(I_ne));
+def Yh_ne = r_ne * (Sin(O_ne) * Cos(v_ne + P_ne -
+O_ne) + Cos(O_ne) * Sin(v_ne + P_ne - O_ne) * Cos(I_ne));
+def Zh_ne = r_ne * (Sin(v_ne + P_ne - O_ne) *
+Sin(I_ne));
+            
+            #Equatorial Coordinate
+def Xq_ne = Xh_ne - Xh_e;
+def Yq_ne = (Yh_ne - Yh_e) * Cos(ec) - Zh_ne *
+Sin(ec);
+def Zq_ne = (Yh_ne - Yh_e) * Sin(ec) + Zh_ne *
+Cos(ec);
+
+def NepLong = v_ne + P_ne;
+def  NepLong_deg = NepLong * degs % 360;
+
+def ra_ne = (FNatn2(Yq_ne, Xq_ne) * degs % 360) /
+15;
+def dec_ne = ATan(Zq_ne / Sqr(Xq_ne * Xq_ne + Yq_ne * Yq_ne)) * degs;
+def dr_ne = Sqrt(Xq_ne * Xq_ne + Yq_ne * Yq_ne +
+Zq_ne * Zq_ne);
+            #plot Neptunedelta = ATan(Zq_ne / Sqrt(Xq_ne * Xq_ne+ Yq_ne * Yq_ne));
+
+def NeptuneDistance = Sqrt(Xq_ne * Xq_ne + Yq_ne *
+Yq_ne + Zq_ne * Zq_ne);
+            
+            #AddLabel(yes, "Neptune long " + (NepLong * degs) %360, Color.ORANGE);
+            #AddLabel(yes, "Neptune Distance " +NeptuneDistance, Color.ORANGE
+
+#Pluto
+def I_p = (17.14175 + 0.0000000841889 * nd) * rads;
+def O_p = (110.30347 - 0.0000002839 * nd) * rads;
+def P_p = (224.06676 - 0.00000100578 * nd) * rads;
+def a_p = 39.48168677 - 0.0000000210574 * nd;
+def e_p = 0.24880766 + 0.00000000177002 * nd;
+def L_p = (238.92881 + 3.97557152635181 / 100.00 * nd)
+* rads;
+
+def m_p = FNrange( L_p - P_p);
+def v_p = FNkep (m_p, e_p);
+def r_p = a_p * ( 1 - e_p * e_p) / ( 1 + e_p *
+Cos(v_p));
+            
+            #Heliocentric coordinates of pluto
+def Xh_p = r_p * (Cos(O_p) * Cos(v_p + P_p -
+O_p) - Sin(O_p) * Sin(v_p + P_p - O_p) * Cos(I_p));
+def Yh_p = r_p * (Sin(O_p) * Cos(v_p + P_p -
+O_p) + Cos(O_p) * Sin(v_p + P_p - O_p) * Cos(I_p));
+def Zh_p = r_p * (Sin(v_p + P_p - O_p) *
+Sin(I_p));
+            
+            #Equatorial Coordinate
+def Xq_p = Xh_p - Xh_e;
+def Yq_p = (Yh_p - Yh_e) * Cos(ec) - Zh_p *
+Sin(ec);
+def Zq_p = (Yh_p - Yh_e) * Sin(ec) + Zh_p *
+Cos(ec);
+
+def PlutoLong = v_p + P_p;
+def  PlutoLong_deg = PlutoLong * degs % 360;
+
+def ra_p = (FNatn2(Yq_p, Xq_p) * degs % 360) /
+15;
+def dec_p = ATan(Zq_p / Sqr(Xq_p * Xq_p + Yq_p * Yq_p)) * degs;
+def dr_p = Sqrt(Xq_p * Xq_p + Yq_p * Yq_p +
+Zq_p * Zq_p);
+            #plot Plutodelta = ATan(Zq_p / Sqrt(Xq_p * Xq_p+ Yq_p * Yq_p));
+
+def PlutoDistance = Sqrt(Xq_p * Xq_p + Yq_p *
+Yq_p + Zq_p * Zq_p);
+
+
+def I_sun = 0.0;
+#def O_sun = (23.4406-.000000003563*nd)*rads;
+def O_sun = 0.0;
+def P_sun = (282.9404 - 0.00000470935 * nd) * rads;
+def a_sun = 1.000000;
+def e_sun = 0.016709 - 0.000000001151 * nd;
+def L_sun = (356.047 + 0.9856002585
+* nd) * rads;
+def m_sun = FNrange( L_sun - P_sun);
+def v_sun = FNkep (m_sun , e_sun);
+def r_sun = a_sun * ( 1 - e_sun * e_sun ) / ( 1 + e_sun *
+Cos(v_sun));
+            
+            #Heliocentric coordinates of  sun
+def Xh_sun = r_sun * (Cos(O_sun) * Cos(v_sun + P_sun -
+O_me) - Sin(O_sun) * Sin(v_sun + P_sun - O_sun) * Cos(I_sun));
+def Yh_sun = r_sun * (Sin(O_sun) * Cos(v_sun + P_sun -
+O_sun) + Cos(O_sun) * Sin(v_sun + P_sun - O_sun) * Cos(I_sun));
+def Zh_sun = r_sun * (Sin(v_sun + P_sun - O_sun) *
+Sin(I_sun));
+         
+            #Equatorial Coordinate
+def Xq_sun =  0;
+def Yq_sun = (Yh_sun - Yh_e) * Cos(ec) - Zh_sun *
+Sin(ec);
+def Zq_sun = (Yh_sun - Yh_e) * Sin(ec) + Zh_sun *
+Cos(ec);
+
+
+def SunLon = v_sun + P_sun;
+def sunLongDeg = (SunLon * degs) % 360;
+
+
+def xs = r_sun * Cos(SunLon);
+def ys = r_sun * Sin(SunLon);
+
+def xe = xs;
+def ye = ys * Cos(ec);
+def ze = ys * Sin(ec);
+def ra_sun = (FNatn2(Yq_sun, Xq_sun)* degs % 360) /
+15;
+def dec_sun = ATan(Zq_sun / Sqr(Xq_sun * Xq_sun + Yq_sun * Yq_sun));
+def dr_sun = Sqrt(Xq_sun * Xq_sun + Yq_sun * Yq_sun +
+Zq_sun * Zq_sun);
+
+#plot sunn = ra_sun;
+#AddLabel(yes, "SUNN" + sunn);
+def r = Sqrt(xs * xs + ye * ye);
+def vv = fnatn2( ye, xe);
+#plot last = vv + O_sun;
+
+
+
+def CurrentYear = GetYear();
+def CurrentMonth = GetMonth();
+def CurrentDOM = GetDayOfMonth(GetYYYYMMDD());
+#zodiac dates
+
+
+
+def ci3;
+def Ci2;
+def Ci1;
+def C;
+def C1;
+def C2;
+def C3;
+def C4;
+input solarposition = {dec, long, ra, helat, default Longdeg};
+switch (solarposition ){
+case dec:
+
+    ci3 = dec_me;
+    Ci2 = dec_ve;
+    Ci1 = dec_ma;
+    C = dec_ju;
+    C1 = dec_sa;
+    C2 = dec_ur;
+    C3 = dec_ne;
+    C4 = dec_p;
+case long:
+    ci3 = MerLong;
+    Ci2 = VeLong;
+    Ci1 = MarLong;
+    C = JupLong;
+    C1 = SatLong;
+    C2 = UranLong;
+    C3 = NepLong;
+    C4 = PlutoLong;
+case Longdeg:
+    ci3 = MerLongDeg;
+    Ci2 = VeLong_deg;
+    Ci1 = MarLong_deg;
+    C = JupLong_deg;
+    C1 = SatLong_deg;
+    C2 = UranLong_deg;
+    C3 = NepLong_deg;
+    C4 = PlutoLong_deg;
+case ra:
+    ci3 = ra_me;
+    Ci2 = ra_ve;
+    Ci1 = ra_ma;
+    C = ra_ju;
+    C1 = ra_sa;
+    C2 = ra_ur;
+    C3 = ra_ne;
+    C4 = ra_p;
+case helat:
+    ci3 = Xh_me;
+    Ci2 = Xh_ve;
+    Ci1 = Xh_ma;
+    C = Xh_ju;
+    C1 = Xh_sa;
+    C2 = Xh_ur;
+    C3 = Xh_ne;
+    C4 = Xh_p;
+}
+
+input showLabel = Yes;
+
+
+
+plot p0 = ci3;
+plot p1 = Ci2;
+plot p2 = Ci1;
+plot p3 = C;
+plot p4 = C1;
+plot p5 = C2;
+plot p6 = C3;
+plot p7 = C4;
+
+
+
+#plot p8 =  zq_me;
+p0.SetDefaultColor(Color.GREEN);
+p1.SetDefaultColor(Color.BLUE);
+p2.SetDefaultColor(Color.CYAN);
+p3.SetDefaultColor(Color.ORANGE);
+p4.SetDefaultColor(Color.GRAY);
+p5.SetDefaultColor(Color.LIME);
+p6.SetDefaultColor(Color.MAGENTA);
+p7.SetDefaultColor(Color.PLUM);
+
+
+AddLabel(showLabel, "MER   " + ci3, p0.TakeValueColor());
+AddLabel(showLabel, "Ven  " + Ci2, p1.TakeValueColor());
+AddLabel(showLabel, "Mar  " + Ci1, p2.TakeValueColor());
+AddLabel(showLabel, "Jup  " + C, p3.TakeValueColor());
+AddLabel(showLabel, "Sat  " + C1, p4.TakeValueColor());
+AddLabel(showLabel, "Uran  " + C2, p5.TakeValueColor());
+AddLabel(showLabel, "Nep  " + C3, p6.TakeValueColor());
+AddLabel(showLabel, "Plut  " + C4, p7.TakeValueColor());
+
+
+def meconj = if ci3[1] crosses Ci2 then 1 else 0;
+AddChartBubble(meconj,ci3, "Mercury conj", Color.CYAN, yes);
+
