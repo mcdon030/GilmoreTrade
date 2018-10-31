@@ -39,7 +39,7 @@
         def TimeFalseB = (AbsValue(timeAtoD ) / AbsValue(timeBtoC));##  false break
         def TimeDoubleCross = (AbsValue(timeAtoD ) / AbsValue(timeXtoC));##  Doublecross
         def TimeInsideCross = (AbsValue(timeAtoD ) / AbsValue(timeCtoD));##  Inside Cross      ## add to falsebreakbuy
-        def TimeOutsideCross = (AbsValue(timeAtoD ) / AbsValue(timeBtoD));##  outside Cross direct relations
+        def TimeOutsideCross = (AbsValue(timeBtoD ) / AbsValue(timeAtoD));##  outside Cross direct relations
         def DirectStructureXAD = (AbsValue(timeAtoD ) / AbsValue(timeXtoA));##  total
         def DirectStructureBCCD = (AbsValue(timeCtoD ) / AbsValue(timeBtoc));##  total /2
         def priceDirectStructureBCCD = (AbsValue(p5-p4 ) / AbsValue(p4-p3));## 
@@ -49,8 +49,8 @@
         def PriceReverseCross = (AbsValue(p5 - p2 ) / AbsValue(p4 - p3));##  Reversecros
         def TimeFalseBPrice = (AbsValue(timeAtoD ) / AbsValue(p4 - p3));##  false break
         def PriceDoubleCross = (AbsValue(p5 - p2 ) / AbsValue(p4 - p1));##  Doublecross
-        def PriceInsideCross = (AbsValue(p5 - p2 ) / AbsValue(p5 - p4));##  Inside Cross  ## add to falsebreakbuy
-        def PriceOutsideCross = (AbsValue(p5 - p2 ) / AbsValue(p5 - p3));;##  outside Cross direct relations  ## add to falsebreakbuy
+        def PriceInsideCross = (AbsValue(p5 - p4 ) / AbsValue(p5 - p1));##  Inside Cross  ## add to falsebreakbuy
+        def PriceOutsideCross = (AbsValue(p5 - p3 ) / AbsValue(p5 - p2));;##  outside Cross direct relations  ## add to falsebreakbuy
        def PriceRetraceXCBC = (AbsValue(p4 - p3 ) / AbsValue(p4 - p1));##  retrace1
     def PriceRetraceXAAC = (AbsValue(p4 - p2 ) / AbsValue(p2 - p1));##  retrace2
   
