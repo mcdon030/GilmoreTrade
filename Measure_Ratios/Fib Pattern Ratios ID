@@ -1,1 +1,241 @@
+#notes: need:
+
+1. triple bottom/top
+
+2. Double Drive 1:1 into a 1:1 Correction: 
+
+
+
+
+
+
+
+####1:1 Balance
+
+def xcd_ = if xcd>=(.382-tolerance) and xcd<= (.618+tolerance) then 1  else Double.NaN;
+
+def bcd_ = if !isnan(xcd_) and bcd>=(.382-tolerance) and bcd<= (.618+tolerance) then 1  else Double.NaN;
+
+def xab_ = if !isnan(bcd_) and xab>=(.382-tolerance) and xab<= (.618+tolerance) then 1  else Double.NaN;
+
+def op13 = !isnan(xab_)  ; ## balance rule
+
+
+
+#rectangle
+
+def rect_xab = if xab >= .382 and xab <= .618 then 1  else Double.NaN;
+
+def rect_abc = if abc >= (1 - tolerance) and abc<= (1 + tolerance) then 1  else Double.NaN;
+
+def rect_bcd = if bcd >= (1 - tolerance) and bcd<= (1 + tolerance) then 1  else Double.NaN;
+
+def rect_xad = if xad>= .382 and xad<= .618 then 1  else Double.NaN;
+
+def rect_xcd = if xcd>= .382 and xcd<= .618 then 1  else Double.NaN;
+
+            def op9 = !IsNaN(rect_xab) and !IsNaN(rect_abc)  and !IsNaN(rect_bcd) and !IsNaN(rect_xad) and !IsNaN(rect_xcd);
+
+
+
+
+
+
+
+##  double bottom/top
+
+def DB_xad_ = if xad>=(1.618-tolerance) and xad<= (2+tolerance) then 1  else Double.NaN;
+
+def DB_bcd_ = if !isnan(DB_xad_) and bcd>=(1-tolerance) and bcd<= (1+tolerance) then 1  else Double.NaN;
+
+def op4 = !isnan(DB_bcd_)  ; 
+
+
+
+
+
+##threedrives
+
+def three_xab = if xab >= 1.13 and xab <= 1.618 then 1  else Double.NaN;
+
+def three_abc = if abc >= 0.50 and abc <= 0.786 then 1  else Double.NaN;
+
+def three_bcd = if bcd >= 1.13 and bcd <= 1.618 then 1 else Double.NaN;
+
+def three_xad = if xad >= 1.27 and xad <= 2.618 then 1 else Double.NaN;
+
+def op4 = !IsNaN(three_xab) and !IsNaN(three_abc)  and !IsNaN(three_bcd) and !IsNaN(three_xad);
+
+
+
+#####ABCD and ABCD Reciprical
+
+def xcd_ = if  xcd >= .382 and xcd <= .618 or  xad >= .382 and xad <= .618 then 1 else Double.NaN;
+
+def ABCD_abc = if abc >= 0.382 and abc <= 0.886 then 1  else Double.NaN;
+
+def ABCD_bcd = if bcd >= 1.13 and bcd <= 2.618 then 1  else Double.NaN;
+
+            def op1 =  !IsNaN(ABCD_abc) && !IsNaN(ABCD_bcd) && !IsNaN(xcd_ );
+
+	    
+
+def ABCD_abcR = if abc >= 1.13 and abc <= 3.618 then 1  else Double.NaN;
+
+def ABCD_bcdR = if bcd >= .382 and bcd <= .886 then 1  else Double.NaN;
+
+        def op2 =  !IsNaN(ABCD_abcR) && !IsNaN(ABCD_bcdR) && !IsNaN(xcd_ );
+
+	
+
+		
+
+#######head and shoulders   
+
+def hns_xab = if xab >= 1.13 and xab <= 10000 then 1  else Double.NaN;
+
+def hns_abc = if abc >= .886 and abc <= 1.12 then 1  else Double.NaN;
+
+def hns_xad = if xad >= .886 and xad <= 1.12 then 1 else Double.NaN;
+
+def op8 = !IsNaN(hns_xab) and !IsNaN(hns_abc)  and !IsNaN(hns_xad);
+
+
+
+
+
+#rectangle
+
+def rect_xab = if xab >= .382 and xab <= .618 then 1  else Double.NaN;
+
+def rect_abc = if abc >= .88 and abc <= 1.12 then 1  else Double.NaN;
+
+def rect_bcd = if bcd >= .88 and bcd <= 1.12 then 1  else Double.NaN;
+
+def rect_xad2 = if xad>= .382 and xad<= .618 then 1  else Double.NaN;
+
+
+
+            def op9 = !IsNaN(rect_xab) and !IsNaN(rect_abc)  and !IsNaN(rect_bcd) and !IsNaN(rect_xad2);
+
+						
+
+		def raw1d_ = if    w1d >= 1.272 and w1d <= 1.618 then 1  else  Double.NaN;
+
+def raw2d_ = if !IsNaN(raw1d_) and w2d >= .618 and w2d <= .886 then 1  else  Double.NaN;
+
+def raw3d_ = if !IsNaN(raw2d_) and w3d >= 1.27 and w3d <= 1.618 then 1  else  Double.NaN;
+
+def raw4d_ = if !IsNaN(raw3d_) and w4d >= .618 and w4d <= .886 then 1  else  Double.NaN;
+
+def waveExpanding= !IsNaN(raw4d_);
+
+def raw1c_ = if    w1d >= .618 and w1d <= .786 then 1  else  Double.NaN;
+
+def raw2c_ = if !IsNaN(raw1c_) and w2d >= .236 and w2d <= .618 then 1  else  Double.NaN;
+
+def raw3c_ = if !IsNaN(raw2c_) and w3d >= .786 and w3d <= .9999 then 1  else  Double.NaN;
+
+def raw4c_ = if !IsNaN(raw3c_) and w4d >= .50 and w4d <= .886 then 1  else  Double.NaN;
+
+def waveContracting = !IsNaN(raw4c_);
+
+def triangle = waveExpanding or waveContracting;	
+
+
+
+##wedge
+
+def A_DASC_xab = if xab >= .318 and xab <= 1.13 then 1  else Double.NaN;
+
+def A_DASC_abc = if abc >= .886 and abc <= 1.13 then 1  else Double.NaN;
+
+def A_DASC_bcd = if bcd >= .886 and bcd <= 1.13 then 1 else Double.NaN;
+
+def A_DASC_xad = if xad >= .318 and xad <= .618 then 1 else Double.NaN;
+
+def op10 = !IsNaN(A_DASC_xab) and !IsNaN(A_DASC_abc)  and !IsNaN(A_DASC_bcd) and !IsNaN(A_DASC_xad);
+
+
+
+### normal wave5
+
+def rawc_ = if    wcr >= .50 and wcr <= 2.618 then 1  else  Double.NaN;
+
+def rawb_ = if !IsNaN(rawc_) and wbr >= .382  and wbr <= .854 then 1 else Double.NaN;
+
+def rawa_ = if !IsNaN(rawb_) and war <= .999 then 1 else Double.NaN;
+
+def raw5_ = if !IsNaN(rawa_) and w5r >= 1.245  and w5r <= 2.618 and x5 > x6 then 1 else Double.NaN;
+
+def raw4_ = if !IsNaN(raw5_) and w4r >= .14   and w4r <= .854 then 1 else Double.NaN;
+
+def raw3_ = if !IsNaN(raw4_) and w3r >= 1.00  and w3r <= 4.236 then 1 else Double.NaN;
+
+def raw2_ = if !IsNaN(raw3_) and w2r >= .382   and w2r <= .854 then 1 else Double.NaN;
+
+
+
+
+
+
+
+
+
+### normal wave5
+
+def rawc_ = if    wcr >= .50 and wcr <= 2.618 then 1  else  Double.NaN;
+
+def rawb_ = if !IsNaN(rawc_) and wbr >= .382  and wbr <= .854 then 1 else Double.NaN;
+
+def rawa_ = if !IsNaN(rawb_) and war <= .999 then 1 else Double.NaN;
+
+def raw5_ = if !IsNaN(rawa_) and w5r >= 1.245  and w5r <= 2.618 and x5 > x6 then 1 else Double.NaN;
+
+def raw4_ = if !IsNaN(raw5_) and w4r >= .14   and w4r <= .854 then 1 else Double.NaN;
+
+def raw3_ = if !IsNaN(raw4_) and w3r >= 1.00  and w3r <= 4.236 then 1 else Double.NaN;
+
+def raw2_ = if !IsNaN(raw3_) and w2r >= .382   and w2r <= .854 then 1 else Double.NaN;
+
+
+
+###  wave5   extended 3
+
+def raw5e_ = if    w5er >= 1.236 and w5er <= 2.618 then 1  else  Double.NaN;
+
+def raw4e_ = if !IsNaN(raw5e_) and w4er >= .382 and w4er <= .854 then 1  else  Double.NaN;
+
+def raw3e_ = if !IsNaN(raw4e_) and w3er >= 1.236 and w3er <= 4.236 then 1  else  Double.NaN;
+
+def raw35_ = if !IsNaN(raw3e_) and w35er >= 1.236 and w35er <= 2.618 then 1  else  Double.NaN;
+
+def raw34_ = if !IsNaN(raw35_) and w34er >= .382 and w34er <= .854 then 1  else  Double.NaN;
+
+def raw33_ = if !IsNaN(raw34_) and w33er >= 1.236 and w33er <= 4.236 then 1  else  Double.NaN;
+
+def raw32_ = if !IsNaN(raw33_) and w32er >= .318 and w32er <= .618 then 1  else  Double.NaN;
+
+def raw22_ = if !IsNaN(raw32_) and w2er >= .318 and w2er <= .618 then 1  else  Double.NaN;
+
+def wave5e3 = !IsNaN(raw22_);
+
+
+
+#### wave 5 abcd 4
+
+
+
+def re45_ = if    we45 >= 1.236 and we45 <= 2.618 then 1  else  Double.NaN;
+
+def re4c_ = if !IsNaN(re45_) and we4c >= 1.13  and we4c <= 2.618 then 1 else Double.NaN;
+
+def re4b_ = if !IsNaN(re4c_) and we4b >= .382  and we4b <= 1.236 then 1 else Double.NaN;
+
+def re44_ = if !IsNaN(re4b_) and we44 >= .382  and we44 <= .618 then 1 else Double.NaN;
+
+def re43_ = if !IsNaN(re44_) and we43 >= 1.00  and we43 <= 4.236 then 1 else Double.NaN;
+
+def re42_ = if !IsNaN(re43_) and we42 >= .382   and we42 <= .618 then 1 else Double.NaN;
+
 
