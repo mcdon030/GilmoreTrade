@@ -32,8 +32,8 @@
         def TimeBCXA = (AbsValue(timeBtoC) / AbsValue(timeXtoA));###alternates 
         def TimeADC = (AbsValue(timeAtoD ) / AbsValue(timeBtoC));##  Reversecross  ##  false break
         def TimeADXC= (AbsValue(timeAtoD ) / AbsValue(timeXtoC));##  Doublecross
-        def TimeADCD = (AbsValue(timeAtoD ) / AbsValue(timeCtoD));##  Inside Cross      ## add to falsebreakbuy
-        def TimeADBD = (AbsValue(timeAtoD ) / AbsValue(timeBtoD));##  outside Cross direct relations
+        def TimeADCD = (AbsValue(timeCtoD ) / AbsValue(timeAtoD));##  Inside Cross      ## add to falsebreakbuy
+        def TimeADBD = (AbsValue(timeBtoD ) / AbsValue(timeAtoD));##  outside Cross direct relations
  
         def TimeDAX = (AbsValue(timeAtoD ) / AbsValue(timeXtoA))##  total DirectStructureXABBD
         def TimeBCD= (AbsValue(timeCtoD ) / AbsValue(timeBtoc));##  total /2  DirectStructureBCCD
